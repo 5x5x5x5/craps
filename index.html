@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Craps Tutorial</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Craps Tutorial</h1>
+    <div class="status">
+      <span>Bankroll: $<span id="bankroll">500</span></span>
+      <span>Phase: <span id="phase">Come-Out</span></span>
+      <span>Point: <span id="point">—</span></span>
+    </div>
+  </header>
+
+  <main>
+    <section class="tutorial-panel" id="tutorial">
+      <h2 id="tutorial-title">Welcome to Craps</h2>
+      <p id="tutorial-body">Click "Next" to walk through the rules step by step. You can always click any bet's <em>?</em> icon for an explanation.</p>
+      <div class="tutorial-controls">
+        <button id="tut-prev">Back</button>
+        <span id="tut-progress">1 / ?</span>
+        <button id="tut-next">Next</button>
+        <button id="tut-skip">Skip tutorial</button>
+      </div>
+    </section>
+
+    <section class="table">
+      <div class="dice" id="dice">
+        <div class="die" id="die1">?</div>
+        <div class="die" id="die2">?</div>
+        <div class="roll-total" id="roll-total"></div>
+      </div>
+
+      <div class="bet-grid">
+        <!-- Pass Line -->
+        <div class="bet" data-bet="pass">
+          <div class="bet-header">
+            Pass Line <button class="help" data-help="pass">?</button>
+          </div>
+          <div class="bet-amount" id="bet-pass">$0</div>
+          <div class="bet-pays">Pays 1:1</div>
+        </div>
+
+        <!-- Don't Pass -->
+        <div class="bet" data-bet="dontPass">
+          <div class="bet-header">
+            Don't Pass <button class="help" data-help="dontPass">?</button>
+          </div>
+          <div class="bet-amount" id="bet-dontPass">$0</div>
+          <div class="bet-pays">Pays 1:1 (push on 12)</div>
+        </div>
+
+        <!-- Pass Odds -->
+        <div class="bet odds" data-bet="passOdds">
+          <div class="bet-header">
+            Pass Odds <button class="help" data-help="passOdds">?</button>
+          </div>
+          <div class="bet-amount" id="bet-passOdds">$0</div>
+          <div class="bet-pays">True odds — only after point</div>
+        </div>
+
+        <!-- Field -->
+        <div class="bet field" data-bet="field">
+          <div class="bet-header">
+            Field <button class="help" data-help="field">?</button>
+          </div>
+          <div class="bet-amount" id="bet-field">$0</div>
+          <div class="bet-pays">2, 3, 4, 9, 10, 11, 12 (2&amp;12 pay 2:1)</div>
+        </div>
+
+        <!-- Place bets -->
+        <div class="place-row">
+          <div class="bet place" data-bet="place4">
+            <div class="bet-header">Place 4 <button class="help" data-help="place4">?</button></div>
+            <div class="bet-amount" id="bet-place4">$0</div>
+            <div class="bet-pays">9:5</div>
+          </div>
+          <div class="bet place" data-bet="place5">
+            <div class="bet-header">Place 5 <button class="help" data-help="place5">?</button></div>
+            <div class="bet-amount" id="bet-place5">$0</div>
+            <div class="bet-pays">7:5</div>
+          </div>
+          <div class="bet place" data-bet="place6">
+            <div class="bet-header">Place 6 <button class="help" data-help="place6">?</button></div>
+            <div class="bet-amount" id="bet-place6">$0</div>
+            <div class="bet-pays">7:6</div>
+          </div>
+          <div class="bet place" data-bet="place8">
+            <div class="bet-header">Place 8 <button class="help" data-help="place8">?</button></div>
+            <div class="bet-amount" id="bet-place8">$0</div>
+            <div class="bet-pays">7:6</div>
+          </div>
+          <div class="bet place" data-bet="place9">
+            <div class="bet-header">Place 9 <button class="help" data-help="place9">?</button></div>
+            <div class="bet-amount" id="bet-place9">$0</div>
+            <div class="bet-pays">7:5</div>
+          </div>
+          <div class="bet place" data-bet="place10">
+            <div class="bet-header">Place 10 <button class="help" data-help="place10">?</button></div>
+            <div class="bet-amount" id="bet-place10">$0</div>
+            <div class="bet-pays">9:5</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div class="chips">
+          <button class="chip" data-amount="1">$1</button>
+          <button class="chip" data-amount="5">$5</button>
+          <button class="chip" data-amount="25">$25</button>
+          <button class="chip" data-amount="100">$100</button>
+        </div>
+        <div class="selected-chip">
+          Chip: $<span id="selected-amount">5</span>
+        </div>
+        <button id="roll-btn" class="primary">Roll Dice</button>
+        <button id="clear-bets">Clear bets</button>
+        <button id="reset">Reset bankroll</button>
+      </div>
+    </section>
+
+    <aside class="log">
+      <h3>Roll Log</h3>
+      <ul id="log-list"></ul>
+    </aside>
+  </main>
+
+  <div class="modal hidden" id="modal">
+    <div class="modal-content">
+      <h3 id="modal-title"></h3>
+      <p id="modal-body"></p>
+      <button id="modal-close">Got it</button>
+    </div>
+  </div>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>
