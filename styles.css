@@ -130,7 +130,7 @@ main {
 
 .bet-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 0.6rem;
   margin-bottom: 1.5rem;
 }
@@ -153,14 +153,15 @@ main {
 .bet.disabled { opacity: 0.4; cursor: not-allowed; }
 .bet.disabled:hover { background: var(--felt-dark); }
 
-.bet.field { grid-column: span 4; }
-.place-row { grid-column: span 4; display: grid; grid-template-columns: repeat(6, 1fr); gap: 0.6rem; }
+.bet.field { grid-column: span 3; }
+.place-row { grid-column: span 3; display: grid; grid-template-columns: repeat(6, 1fr); gap: 0.6rem; }
 .place-row .bet { min-height: 70px; }
 
 .bet-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 0.3rem;
   font-weight: 600;
   font-size: 0.85rem;
 }
@@ -184,6 +185,7 @@ main {
   cursor: pointer;
   font-size: 0.75rem;
   padding: 0;
+  flex-shrink: 0;
 }
 
 .controls {
@@ -242,13 +244,20 @@ main {
   border-radius: 8px;
   padding: 1rem;
   height: fit-content;
-  max-height: 80vh;
-  overflow-y: auto;
 }
 
 .log h3 { margin-top: 0; color: var(--gold); }
 
-.log ul { list-style: none; padding: 0; margin: 0; font-size: 0.85rem; }
+/* the list scrolls, not the whole sidebar — keeps the House-Edge Lab in view */
+.log ul { list-style: none; padding: 0; margin: 0; font-size: 0.85rem; max-height: 45vh; overflow-y: auto; }
+
+#log-list:empty::before {
+  content: "No rolls yet — place a bet and roll.";
+  display: block;
+  color: #777;
+  font-size: 0.8rem;
+  padding: 0.2rem 0 0.4rem;
+}
 
 .log li {
   padding: 0.4rem 0;
@@ -336,3 +345,12 @@ select:focus-visible {
 }
 
 #sim-result { font-size: 0.85rem; line-height: 1.5; }
+
+/* narrow table column: place cards go 3x2 instead of squishing 6-across */
+@media (max-width: 1280px) {
+  .place-row { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 1080px) {
+  main { grid-template-columns: 1fr; }
+}
