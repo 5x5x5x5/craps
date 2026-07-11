@@ -275,40 +275,191 @@ export const BET_INFO = {
   place4: {
     name: "Place 4",
     summary:
-      "Bet that 4 will roll before 7. Stays up across rolls. True odds are 2:1; the casino pays 9:5, giving a steep house edge.",
+      "Bet that 4 will roll before 7. Stays up across rolls, but is off (no action) during come-out rolls. True odds are 2:1; the casino pays 9:5, giving a steep house edge.",
     payout: "9:5",
     houseEdge: "6.67%",
   },
   place5: {
     name: "Place 5",
-    summary: "Bet that 5 will roll before 7. True odds 3:2; casino pays 7:5.",
+    summary:
+      "Bet that 5 will roll before 7. Off during come-out rolls. True odds 3:2; casino pays 7:5.",
     payout: "7:5",
     houseEdge: "4.0%",
   },
   place6: {
     name: "Place 6",
     summary:
-      "Bet that 6 will roll before 7. True odds 6:5; casino pays 7:6. Best of the place bets.",
+      "Bet that 6 will roll before 7. Off during come-out rolls. True odds 6:5; casino pays 7:6. Best of the place bets.",
     payout: "7:6",
     houseEdge: "1.52%",
   },
   place8: {
     name: "Place 8",
     summary:
-      "Bet that 8 will roll before 7. True odds 6:5; casino pays 7:6. Tied with Place 6 as the best place bet.",
+      "Bet that 8 will roll before 7. Off during come-out rolls. True odds 6:5; casino pays 7:6. Tied with Place 6 as the best place bet.",
     payout: "7:6",
     houseEdge: "1.52%",
   },
   place9: {
     name: "Place 9",
-    summary: "Bet that 9 will roll before 7. True odds 3:2; casino pays 7:5.",
+    summary:
+      "Bet that 9 will roll before 7. Off during come-out rolls. True odds 3:2; casino pays 7:5.",
     payout: "7:5",
     houseEdge: "4.0%",
   },
   place10: {
     name: "Place 10",
-    summary: "Bet that 10 will roll before 7. True odds 2:1; casino pays 9:5.",
+    summary:
+      "Bet that 10 will roll before 7. Off during come-out rolls. True odds 2:1; casino pays 9:5.",
     payout: "9:5",
     houseEdge: "6.67%",
   },
 };
+
+function event(name, profit, suffix = "") {
+  return {
+    message: `${name}: ${profit >= 0 ? "+" : "-"}$${Math.abs(profit)}${suffix}`,
+    kind: profit >= 0 ? "win" : "loss",
+    profit,
+  };
+}
+
+/**
+ * Resolve one roll against the pre-roll state and return the next state plus
+ * log events. Every bet is resolved BEFORE phase/point mutate — resolving
+ * Don't Pass after the Pass Line result had been applied was a real bug
+ * (don't pass lost instantly on a come-out point-set, and survived when the
+ * shooter made the point).
+ *
+ * Events: { message, kind: 'win'|'loss'|'info', profit } — profit is the
+ * bet's net change so callers/tests can audit money conservation.
+ */
+export function applyRoll(state, total) {
+  const s = structuredClone(state);
+
+  const field = resolveField(s, total);
+  // Place bets are "off" (no action) on come-out rolls, as at a real table.
+  const placeResults = s.phase === PHASE.POINT ? resolvePlace(s, total) : {};
+  const odds = resolvePassOdds(s, total);
+  const pass = resolvePassLine(s, total);
+  const dontPass = resolveDontPass(s, total);
+
+  const events = [];
+
+  if (field.resolved) {
+    s.bankroll += s.bets.field + field.profit;
+    events.push(event("Field", field.profit));
+    s.bets.field = 0;
+  }
+
+  for (const [key, res] of Object.entries(placeResults)) {
+    if (res.cleared) {
+      events.push(event(BET_INFO[key].name, res.profit, " (seven out)"));
+      s.bets[key] = 0;
+    } else {
+      s.bankroll += res.profit; // bet stays up; collect profit only
+      events.push(event(BET_INFO[key].name, res.profit));
+    }
+  }
+
+  if (odds.profit !== 0) {
+    s.bankroll += s.bets.passOdds + odds.profit;
+    events.push(event("Pass Odds", odds.profit));
+    s.bets.passOdds = 0;
+  }
+
+  // Zero-bet resolutions are gated out of events — a roll with nothing on the
+  // line shouldn't log "Pass Line: +$0".
+  if (s.bets.pass > 0 && pass.outcome === "win") {
+    s.bankroll += s.bets.pass + pass.profit;
+    events.push(event("Pass Line", pass.profit));
+    s.bets.pass = 0;
+  } else if (s.bets.pass > 0 && pass.outcome === "loss") {
+    events.push(event("Pass Line", pass.profit));
+    s.bets.pass = 0;
+  } else if (pass.outcome === "point-set") {
+    events.push({
+      message: `Point is now ${pass.newPoint}`,
+      kind: "info",
+      profit: 0,
+    });
+  }
+
+  if (s.bets.dontPass > 0 && dontPass.outcome === "win") {
+    s.bankroll += s.bets.dontPass + dontPass.profit;
+    events.push(event("Don't Pass", dontPass.profit));
+    s.bets.dontPass = 0;
+  } else if (s.bets.dontPass > 0 && dontPass.outcome === "loss") {
+    events.push(event("Don't Pass", dontPass.profit));
+    s.bets.dontPass = 0;
+  } else if (s.bets.dontPass > 0 && dontPass.outcome === "push") {
+    s.bankroll += s.bets.dontPass;
+    events.push({ message: "Don't Pass: push (12)", kind: "info", profit: 0 });
+    s.bets.dontPass = 0;
+  }
+
+  // Phase transitions depend only on (phase, total), so pass and don't pass
+  // always agree; pass line's result is authoritative.
+  s.phase = pass.newPhase;
+  s.point = pass.newPoint;
+
+  return { state: s, events };
+}
+
+/**
+ * Monte-carlo one bet type to measure its house edge empirically.
+ * Flat $30 units: divisible by every payout denominator (5, 6, 2), so
+ * Math.floor never skews the measurement. A "round" is one resolution of the
+ * bet (multi-roll bets keep rolling until they win or lose).
+ */
+export function simulateBet(betKey, rounds = 10000, rng = Math.random) {
+  const UNIT = 30;
+  let wagered = 0;
+  let net = 0;
+  for (let i = 0; i < rounds; i++) {
+    const s = initialState(0);
+    s.bets[betKey] = UNIT;
+    if (betKey === "passOdds") {
+      // Odds only exist behind an established point.
+      while (s.phase === PHASE.COME_OUT) {
+        const r = resolvePassLine(s, rollDice(rng).total);
+        s.phase = r.newPhase;
+        s.point = r.newPoint;
+      }
+    }
+    wagered += UNIT;
+    let resolved = false;
+    while (!resolved) {
+      const total = rollDice(rng).total;
+      if (betKey === "pass" || betKey === "dontPass") {
+        const resolve = betKey === "pass" ? resolvePassLine : resolveDontPass;
+        const r = resolve(s, total);
+        s.phase = r.newPhase;
+        s.point = r.newPoint;
+        if (
+          r.outcome === "win" ||
+          r.outcome === "loss" ||
+          r.outcome === "push"
+        ) {
+          net += r.profit;
+          resolved = true;
+        }
+      } else if (betKey === "passOdds") {
+        if (total === s.point || total === 7) {
+          net += resolvePassOdds(s, total).profit;
+          resolved = true;
+        }
+      } else if (betKey === "field") {
+        net += resolveField(s, total).profit;
+        resolved = true;
+      } else {
+        const r = resolvePlace(s, total)[betKey];
+        if (r) {
+          net += r.profit;
+          resolved = true;
+        }
+      }
+    }
+  }
+  return { wagered, net, edgePct: (-net / wagered) * 100 };
+}

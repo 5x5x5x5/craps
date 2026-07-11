@@ -70,7 +70,7 @@ export const TUTORIAL_STEPS = [
   {
     title: "Place bets",
     body:
-      "Place bets let you bet on a specific number (4, 5, 6, 8, 9, 10) rolling before a 7. Multi-roll: they sit there until they win or 7 hits.\n\n" +
+      "Place bets let you bet on a specific number (4, 5, 6, 8, 9, 10) rolling before a 7. Multi-roll: they sit there until they win or 7 hits. Like a real table, they're OFF (no action) during come-out rolls.\n\n" +
       "  • Place 6 / 8 → pays 7:6 (1.52% edge) — fine bets\n" +
       "  • Place 5 / 9 → pays 7:5 (4.0% edge) — meh\n" +
       "  • Place 4 / 10 → pays 9:5 (6.67% edge) — bad\n\n" +

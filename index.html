@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Craps Tutorial</title>
   <link rel="stylesheet" href="styles.css" />
@@ -37,36 +38,36 @@
 
       <div class="bet-grid">
         <!-- Pass Line -->
-        <div class="bet" data-bet="pass">
+        <div class="bet" data-bet="pass" role="button" tabindex="0">
           <div class="bet-header">
-            Pass Line <button class="help" data-help="pass">?</button>
+            Pass Line <button class="help" data-help="pass" aria-label="Explain Pass Line">?</button>
           </div>
           <div class="bet-amount" id="bet-pass">$0</div>
           <div class="bet-pays">Pays 1:1</div>
         </div>
 
         <!-- Don't Pass -->
-        <div class="bet" data-bet="dontPass">
+        <div class="bet" data-bet="dontPass" role="button" tabindex="0">
           <div class="bet-header">
-            Don't Pass <button class="help" data-help="dontPass">?</button>
+            Don't Pass <button class="help" data-help="dontPass" aria-label="Explain Don't Pass">?</button>
           </div>
           <div class="bet-amount" id="bet-dontPass">$0</div>
           <div class="bet-pays">Pays 1:1 (push on 12)</div>
         </div>
 
         <!-- Pass Odds -->
-        <div class="bet odds" data-bet="passOdds">
+        <div class="bet odds" data-bet="passOdds" role="button" tabindex="0">
           <div class="bet-header">
-            Pass Odds <button class="help" data-help="passOdds">?</button>
+            Pass Odds <button class="help" data-help="passOdds" aria-label="Explain Pass Odds">?</button>
           </div>
           <div class="bet-amount" id="bet-passOdds">$0</div>
           <div class="bet-pays">True odds — only after point</div>
         </div>
 
         <!-- Field -->
-        <div class="bet field" data-bet="field">
+        <div class="bet field" data-bet="field" role="button" tabindex="0">
           <div class="bet-header">
-            Field <button class="help" data-help="field">?</button>
+            Field <button class="help" data-help="field" aria-label="Explain Field">?</button>
           </div>
           <div class="bet-amount" id="bet-field">$0</div>
           <div class="bet-pays">2, 3, 4, 9, 10, 11, 12 (2&amp;12 pay 2:1)</div>
@@ -74,33 +75,33 @@
 
         <!-- Place bets -->
         <div class="place-row">
-          <div class="bet place" data-bet="place4">
-            <div class="bet-header">Place 4 <button class="help" data-help="place4">?</button></div>
+          <div class="bet place" data-bet="place4" role="button" tabindex="0">
+            <div class="bet-header">Place 4 <button class="help" data-help="place4" aria-label="Explain Place 4">?</button></div>
             <div class="bet-amount" id="bet-place4">$0</div>
             <div class="bet-pays">9:5</div>
           </div>
-          <div class="bet place" data-bet="place5">
-            <div class="bet-header">Place 5 <button class="help" data-help="place5">?</button></div>
+          <div class="bet place" data-bet="place5" role="button" tabindex="0">
+            <div class="bet-header">Place 5 <button class="help" data-help="place5" aria-label="Explain Place 5">?</button></div>
             <div class="bet-amount" id="bet-place5">$0</div>
             <div class="bet-pays">7:5</div>
           </div>
-          <div class="bet place" data-bet="place6">
-            <div class="bet-header">Place 6 <button class="help" data-help="place6">?</button></div>
+          <div class="bet place" data-bet="place6" role="button" tabindex="0">
+            <div class="bet-header">Place 6 <button class="help" data-help="place6" aria-label="Explain Place 6">?</button></div>
             <div class="bet-amount" id="bet-place6">$0</div>
             <div class="bet-pays">7:6</div>
           </div>
-          <div class="bet place" data-bet="place8">
-            <div class="bet-header">Place 8 <button class="help" data-help="place8">?</button></div>
+          <div class="bet place" data-bet="place8" role="button" tabindex="0">
+            <div class="bet-header">Place 8 <button class="help" data-help="place8" aria-label="Explain Place 8">?</button></div>
             <div class="bet-amount" id="bet-place8">$0</div>
             <div class="bet-pays">7:6</div>
           </div>
-          <div class="bet place" data-bet="place9">
-            <div class="bet-header">Place 9 <button class="help" data-help="place9">?</button></div>
+          <div class="bet place" data-bet="place9" role="button" tabindex="0">
+            <div class="bet-header">Place 9 <button class="help" data-help="place9" aria-label="Explain Place 9">?</button></div>
             <div class="bet-amount" id="bet-place9">$0</div>
             <div class="bet-pays">7:5</div>
           </div>
-          <div class="bet place" data-bet="place10">
-            <div class="bet-header">Place 10 <button class="help" data-help="place10">?</button></div>
+          <div class="bet place" data-bet="place10" role="button" tabindex="0">
+            <div class="bet-header">Place 10 <button class="help" data-help="place10" aria-label="Explain Place 10">?</button></div>
             <div class="bet-amount" id="bet-place10">$0</div>
             <div class="bet-pays">9:5</div>
           </div>
@@ -125,12 +126,20 @@
 
     <aside class="log">
       <h3>Roll Log</h3>
-      <ul id="log-list"></ul>
+      <ul id="log-list" role="log"></ul>
+
+      <section class="simulator">
+        <h3>House-Edge Lab</h3>
+        <p class="sim-hint">Simulate 10,000 resolutions of one bet and compare the measured edge with theory.</p>
+        <select id="sim-bet" aria-label="Bet to simulate"></select>
+        <button id="sim-run">Run 10,000 rounds</button>
+        <p id="sim-result" role="status"></p>
+      </section>
     </aside>
   </main>
 
   <div class="modal hidden" id="modal">
-    <div class="modal-content">
+    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <h3 id="modal-title"></h3>
       <p id="modal-body"></p>
       <button id="modal-close">Got it</button>

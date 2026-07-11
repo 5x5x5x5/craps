@@ -292,3 +292,47 @@ main {
   font-weight: 600;
   cursor: pointer;
 }
+
+.bet:focus-visible,
+button:focus-visible,
+select:focus-visible {
+  outline: 3px solid var(--cream);
+  outline-offset: 2px;
+}
+
+.simulator {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid #3a3a3a;
+}
+
+.simulator h3 { color: var(--gold); margin: 0 0 0.5rem; }
+
+.sim-hint {
+  font-size: 0.8rem;
+  color: #aaa;
+  margin: 0 0 0.6rem;
+  line-height: 1.4;
+}
+
+#sim-bet {
+  width: 100%;
+  margin-bottom: 0.5rem;
+  padding: 0.4rem;
+  background: var(--ink);
+  color: var(--cream);
+  border: 1px solid #555;
+  border-radius: 4px;
+}
+
+#sim-run {
+  background: var(--gold);
+  color: var(--ink);
+  border: none;
+  padding: 0.5rem 0.9rem;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+#sim-result { font-size: 0.85rem; line-height: 1.5; }

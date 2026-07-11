@@ -2,11 +2,8 @@ import {
   PHASE,
   initialState,
   rollDice,
-  resolvePassLine,
-  resolveDontPass,
-  resolvePassOdds,
-  resolveField,
-  resolvePlace,
+  applyRoll,
+  simulateBet,
   BET_INFO,
 } from "./game.js";
 import { TUTORIAL_STEPS, renderTutorialStep } from "./tutorial.js";
@@ -32,6 +29,9 @@ const els = {
   modalTitle: $("modal-title"),
   modalBody: $("modal-body"),
   modalClose: $("modal-close"),
+  simBet: $("sim-bet"),
+  simRun: $("sim-run"),
+  simResult: $("sim-result"),
   tut: {
     title: $("tutorial-title"),
     body: $("tutorial-body"),
@@ -129,76 +129,9 @@ async function onRoll() {
     const { d1, d2, total } = rollDice();
     await rollAnimation(d1, d2);
     log(`Rolled ${d1} + ${d2} = ${total}`, "info");
-
-    // Field first — one-roll bet, doesn't care about phase.
-    const field = resolveField(state, total);
-    if (field.resolved) {
-      state.bankroll += state.bets.field + field.profit;
-      log(
-        `Field: ${field.profit >= 0 ? "+" : ""}$${field.profit}`,
-        field.profit >= 0 ? "win" : "loss",
-      );
-      state.bets.field = 0;
-    }
-
-    // Place bets — only resolve on their number or on a 7.
-    const placeResults = resolvePlace(state, total);
-    for (const [key, res] of Object.entries(placeResults)) {
-      if (res.cleared) {
-        log(`${BET_INFO[key].name}: -$${state.bets[key]} (seven out)`, "loss");
-        state.bets[key] = 0;
-      } else {
-        state.bankroll += res.profit; // place stays up; just collect profit
-        log(`${BET_INFO[key].name}: +$${res.profit}`, "win");
-      }
-    }
-
-    // Pass Odds — resolve before pass line so we can read the original point.
-    const odds = resolvePassOdds(state, total);
-    if (odds.profit !== 0) {
-      state.bankroll += state.bets.passOdds + odds.profit;
-      log(
-        `Pass Odds: ${odds.profit >= 0 ? "+" : ""}$${odds.profit}`,
-        odds.profit >= 0 ? "win" : "loss",
-      );
-      state.bets.passOdds = 0;
-    }
-
-    // Pass Line.
-    try {
-      const pass = resolvePassLine(state, total);
-      if (pass.outcome === "win") {
-        state.bankroll += state.bets.pass + pass.profit;
-        log(`Pass Line: +$${pass.profit}`, "win");
-        state.bets.pass = 0;
-      } else if (pass.outcome === "loss") {
-        log(`Pass Line: -$${Math.abs(pass.profit)}`, "loss");
-        state.bets.pass = 0;
-      } else if (pass.outcome === "point-set") {
-        log(`Point is now ${pass.newPoint}`, "info");
-      }
-      state.phase = pass.newPhase;
-      state.point = pass.newPoint;
-    } catch (err) {
-      log(`⚠ ${err.message}`, "loss");
-      console.error(err);
-    }
-
-    // Don't Pass.
-    const dontPass = resolveDontPass(state, total);
-    if (dontPass.outcome === "win") {
-      state.bankroll += state.bets.dontPass + dontPass.profit;
-      log(`Don't Pass: +$${dontPass.profit}`, "win");
-      state.bets.dontPass = 0;
-    } else if (dontPass.outcome === "loss") {
-      log(`Don't Pass: -$${Math.abs(dontPass.profit)}`, "loss");
-      state.bets.dontPass = 0;
-    } else if (dontPass.outcome === "push") {
-      log(`Don't Pass: push (12)`, "info");
-      state.bankroll += state.bets.dontPass;
-      state.bets.dontPass = 0;
-    }
-
+    const result = applyRoll(state, total);
+    state = result.state;
+    for (const ev of result.events) log(ev.message, ev.kind);
     render();
   } finally {
     els.rollBtn.disabled = false;
@@ -222,6 +155,16 @@ function renderTutorial() {
   );
 }
 
+// --- House-edge simulator ---
+function runSimulation() {
+  const key = els.simBet.value;
+  const { wagered, net, edgePct } = simulateBet(key, 10000);
+  els.simResult.textContent =
+    `${BET_INFO[key].name}: wagered $${wagered.toLocaleString()}, ` +
+    `net ${net >= 0 ? "+" : "-"}$${Math.abs(net).toLocaleString()}. ` +
+    `Measured edge: ${edgePct.toFixed(2)}% (theory: ${BET_INFO[key].houseEdge}).`;
+}
+
 // --- Event wiring ---
 document.querySelectorAll(".chip").forEach((chip) => {
   chip.addEventListener("click", () => {
@@ -235,6 +178,12 @@ document.querySelectorAll(".bet").forEach((bet) => {
     // Ignore clicks on the help button so they don't double-trigger.
     if (e.target.classList.contains("help")) return;
     placeBet(bet.dataset.bet);
+  });
+  bet.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      placeBet(bet.dataset.bet);
+    }
   });
 });
 
@@ -262,6 +211,17 @@ els.modalClose.addEventListener("click", () =>
 els.modal.addEventListener("click", (e) => {
   if (e.target === els.modal) els.modal.classList.add("hidden");
 });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") els.modal.classList.add("hidden");
+});
+
+for (const [key, info] of Object.entries(BET_INFO)) {
+  const opt = document.createElement("option");
+  opt.value = key;
+  opt.textContent = info.name;
+  els.simBet.appendChild(opt);
+}
+els.simRun.addEventListener("click", runSimulation);
 
 els.tut.prev.addEventListener("click", () => {
   if (tutorialIndex > 0) {
